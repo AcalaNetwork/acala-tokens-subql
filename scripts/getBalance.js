@@ -18,7 +18,7 @@ async function createApi() {
 async function getUnnativeToken() {
   const api = await createApi();
 
-  const apiAt = await api.at('0xfb944678cdcc5ab3f88a84823bf121d675d934f9ae76677383af52d418987620');
+  const apiAt = await api.at('0x5f3cbf4e88a8a83e2507ffc20a8b6d5a393f27af54f4400a7404981bf2c54bbd');
 
   console.log(Object.keys(apiAt.query.tokens.accounts));
 
@@ -68,7 +68,7 @@ async function getNativeToken() {
   const data = accs.map((item) => {
     return {
       account: item[0].args[0].toString(),
-      token: 'KAR',
+      token: 'ACA',
       free: item[1].data.free.toString(),
       reserved: item[1].data.reserved.toString(),
       frozen: item[1].data.feeFrozen.toString()
