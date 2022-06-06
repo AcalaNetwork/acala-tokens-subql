@@ -24,10 +24,13 @@
     "@subql/types": "^0.10.1"
   },
   "dependencies": {
+    "@acala-network/api": "^4.1.3",
     "@acala-network/sdk": "^4.0.2-20",
     "@acala-network/sdk-core": "^4.0.2-20",
     "@acala-network/sdk-wallet": "^4.0.2-20",
     "@acala-network/subql-utils": "^0.1.17",
+    "@open-web3/util": "^1.1.4",
+    "@polkadot/api": "^8.7.1",
     "@subql/node": "^0.28.0"
   }
 }

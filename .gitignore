@@ -55,3 +55,6 @@ Thumbs.db
 
 # Local DataBase files
 .data/
+
+nativeTokenBalance.json
+unNativeTokenbBalance.json
