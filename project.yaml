@@ -7,36 +7,26 @@ schema:
     file: ./schema.graphql
 network:
   genesisHash: '0xbaf5aabe40646d11f0ee8abbdc64f4a4b7674925cba08e4a05ff9ebed6e2126b'
-  dictionary: https://api.subquery.network/sq/AcalaNetwork/karura-dictionary
+  dictionary: https://api.subquery.network/sq/subquery/karura-dictionary
   endpoint: wss://karura.api.onfinality.io/public-ws
   chaintypes:
     file: './src/chain-types.js'
 dataSources:
     - kind: substrate/Runtime
-      startBlock: 1
+      startBlock: 2000000
       mapping:
         file: './dist/index.js'
         handlers:
-          - handler: handleBalancesTransfer
-            kind: substrate/EventHandler
-            filter:
-              module: balances
-              method: Transfer
-          - handler: handleBalancesDeposit
-            kind: substrate/EventHandler
-            filter:
-              module: balances
-              method: Deposit
-          - handler: handleBalancesWithdraw
-            kind: substrate/EventHandler
-            filter:
-              module: balances
-              method: Withdraw
           - handler: handleBalancesDustLost
             kind: substrate/EventHandler
             filter:
               module: balances
               method: DustLost
+          - handler: handleBalancesTransfer
+            kind: substrate/EventHandler
+            filter:
+              module: balances
+              method: Transfer
           - handler: handleBalancesReserved
             kind: substrate/EventHandler
             filter:
@@ -52,28 +42,44 @@ dataSources:
             filter:
               module: balances
               method: ReserveRepatriated
-          - handler: handleCurrenciesTransfer
+          - handler: handleBalancesDeposit
             kind: substrate/EventHandler
             filter:
-              module: currencies
-              method: Transferred
-          - handler: handleCurrenciesDeposite
+              module: balances
+              method: Deposit
+          - handler: handleBalancesWithdraw
             kind: substrate/EventHandler
             filter:
-              module: currencies
+              module: balances
+              method: Withdraw
+       
+          - handler: handleTokensTransfer
+            kind: substrate/EventHandler
+            filter:
+              module: tokens
+              method: Transfer
+          - handler: handleTokensReserved
+            kind: substrate/EventHandler
+            filter:
+              module: tokens
+              method: Reserved
+          - handler: handleTokensReserveRepatriated
+            kind: substrate/EventHandler
+            filter:
+              module: tokens
+              method: ReserveRepatriated
+          - handler: handleTokensDeposited
+            kind: substrate/EventHandler
+            filter:
+              module: tokens
               method: Deposited
-          - handler: handleCurrenciesWithdrawn
+          - handler: handleTokensWithdrawn
             kind: substrate/EventHandler
             filter:
-              module: currencies
+              module: tokens
               method: Withdrawn
-          - handler: handleDustSwept
+          - handler: handleTokensSlashed
             kind: substrate/EventHandler
             filter:
-              module: currencies
-              method: DustSwept
-          - handler: handleBalanceUpdatedEvent
-            kind: substrate/EventHandler
-            filter:
-              module: currencies
-              method: BalanceUpdated
+              module: tokens
+              method: Slashed

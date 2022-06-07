@@ -23,7 +23,7 @@ async function getUnnativeToken() {
   console.log(Object.keys(apiAt.query.tokens.accounts));
 
   const accs = await fetchEntriesToArray((startKey) => {
-    console.log(`fetch start at ${startKey}`);
+    console.log(`fetch unnativeToken start at ${startKey}`);
 
     return apiAt.query.tokens.accounts.entriesPaged({
       args: [],
@@ -45,7 +45,7 @@ async function getUnnativeToken() {
     }
   })
 
-  fs.writeFileSync('unNativeTokenbBalance.json', JSON.stringify(data, undefined, 2), { encoding: 'utf-8' });
+  fs.writeFileSync('./unNativeTokenbBalance.json', JSON.stringify(data, undefined, 2), { encoding: 'utf-8' });
 }
 
 async function getNativeToken() {
@@ -56,7 +56,7 @@ async function getNativeToken() {
   console.log(Object.keys(apiAt.query.system.account));
 
   const accs = await fetchEntriesToArray((startKey) => {
-    console.log(`fetch start at ${startKey}`);
+    console.log(`fetch nativeToken start at ${startKey}`);
 
     return apiAt.query.system.account.entriesPaged({
       args: [],
@@ -64,6 +64,8 @@ async function getNativeToken() {
       startKey,
     })
   })
+
+  console.log(accs.length);
 
   const data = accs.map((item) => {
     return {
@@ -75,8 +77,8 @@ async function getNativeToken() {
     }
   })
 
-  fs.writeFileSync('nativeTokenBalance.json', JSON.stringify(data, undefined, 2), { encoding: 'utf-8' });
+  fs.writeFileSync('./nativeTokenBalance.json', JSON.stringify(data, undefined, 2), { encoding: 'utf-8' });
 }
 
-// getUnnativeToken();
+getUnnativeToken();
 getNativeToken();

@@ -2,19 +2,21 @@ import { SubstrateEvent } from '@subql/types'
 import { getTokenName, getNativeCurrency } from '@acala-network/subql-utils'
 import { handleTransfer } from './handleTransfer'
 import { handleDeposit } from './handleDeposit'
-import { handleTreasuryDeposit } from './handleTreasuryDeposit'
 import { handleReserved } from './handleReserved'
 import { handleUnReserved } from './handleUnReserved'
 import { handleReservedRepatriated } from './handleReserveRepatriated'
 import { handleWithdrawn } from './handleWithdrawn'
-import { handleBalanceUpdated } from './handleBalanceUpdated'
 import { isNewAccount } from '../utils/isNewAccount'
+import { handleSlashed } from './handleSlashed'
+import { readDataFromFile } from '../utils/readDataFromFile'
 
 const nativeToken = getNativeCurrency(api as any);
 
 /*
 handle balances.Transfer
-DONOT need handle balances.Endowed as balances.Endowed is appear with balances.Treansfer
+
+Transfer succeeded.
+Transfer { from: T::AccountId, to: T::AccountId, amount: T::Balance },
 */
 export async function handleBalancesTransfer(event: SubstrateEvent) {
     const [from, to, value] = event.event.data
@@ -26,11 +28,14 @@ export async function handleBalancesTransfer(event: SubstrateEvent) {
     const fromAccountIsNew = isNewAccount(fromId, event);
     const toAccountIsNew = isNewAccount(toId, event);
 
+    await readDataFromFile(event)
     await handleTransfer(tokenName, fromId, toId, amount, event.block.timestamp, blockNumber, fromAccountIsNew, toAccountIsNew)
 }
 
 /*
 handle balances.Deposit
+Some amount was deposited (e.g. for transaction fees).
+Deposit { who: T::AccountId, amount: T::Balance },
 */
 export async function handleBalancesDeposit(event: SubstrateEvent) {
     const [to, value] = event.event.data
@@ -40,11 +45,15 @@ export async function handleBalancesDeposit(event: SubstrateEvent) {
     const blockNumber = event.block.block.header.number.toBigInt()
     const accountIsNew = isNewAccount(toId, event);
 
+    if(blockNumber < BigInt(2000000)) return;
+    await readDataFromFile(event)
     await handleDeposit(toId, tokenName, amount, event.block.timestamp, blockNumber, accountIsNew)
 }
 
 /*
 handle balances.Withdraw
+Some amount was withdrawn from the account (e.g. for transaction fees).
+Withdraw { who: T::AccountId, amount: T::Balance },
 */
 export async function handleBalancesWithdraw(event: SubstrateEvent) {
     const [from, value] = event.event.data
@@ -54,6 +63,8 @@ export async function handleBalancesWithdraw(event: SubstrateEvent) {
     const blockNumber = event.block.block.header.number.toBigInt()
     const accountIsNew = isNewAccount(fromId, event);
 
+    if(blockNumber < BigInt(2000000)) return;
+    await readDataFromFile(event)
     await handleWithdrawn(fromId, tokenName, amount, event.block.timestamp, blockNumber, accountIsNew)
 }
 
@@ -67,36 +78,57 @@ export async function handleBalancesDustLost(event: SubstrateEvent) {
     const tokenName = await getTokenName(nativeToken)
     const blockNumber = event.block.block.header.number.toBigInt()
 
+    if(blockNumber < BigInt(2000000)) return;
+    await readDataFromFile(event)
     await handleWithdrawn(fromId, tokenName, amount, event.block.timestamp, blockNumber)
 }
 
-// handle balances.Reserved
+/**
+handle balances.Reserved
+Some balance was reserved (moved from free to reserved).
+Reserved { who: T::AccountId, amount: T::Balance },
+ */
 export async function handleBalancesReserved(event: SubstrateEvent) {
-    // Some balance was reserved (moved from free to reserved). \[who, value\]
     const [who, value] = event.event.data
     const account = who.toString()
     const amount = BigInt(value.toString())
     const nativeTokenName = await getTokenName(nativeToken)
     const blockNumber = event.block.block.header.number.toBigInt()
 
+    if(blockNumber < BigInt(2000000)) return;
+    await readDataFromFile(event)
     await handleReserved(account, nativeTokenName, amount, event.block.timestamp, blockNumber)
 }
 
-// handle balances.Unreserved
+/**
+handle balances.Unreserved
+Some balance was unreserved (moved from reserved to free).
+Unreserved { who: T::AccountId, amount: T::Balance },
+ */
 export async function handleBalancesUnreserved(event: SubstrateEvent) {
-    // Some balance was unreserved (moved from reserved to free). \[who, value\]
     const [who, value] = event.event.data
     const account = who.toString()
     const amount = BigInt(value.toString())
     const nativeTokenName = await getTokenName(nativeToken)
     const blockNumber = event.block.block.header.number.toBigInt()
 
+    if(blockNumber < BigInt(2000000)) return;
+    await readDataFromFile(event)
     await handleUnReserved(account, nativeTokenName, amount, event.block.timestamp, blockNumber)
 }
 
-// 	handle balances.ReserveRepatriated
+/**
+handle balances.ReserveRepatriated
+Some balance was moved from the reserve of the first account to the second account.
+Final argument indicates the destination balance type.
+ReserveRepatriated {
+    from: T::AccountId,
+    to: T::AccountId,
+    amount: T::Balance,
+    destination_status: Status,
+},
+ */
 export async function handleBalancesReserveRepatriated(event: SubstrateEvent) {
-    // Some balance was moved from the reserve of the first account to the second account.Final argument indicates the destination balance type.\[from, to, balance, destination_status\]
     const [from, to, balance, status] = event.event.data
     const fromId = from.toString()
     const toId = to.toString()
@@ -104,6 +136,8 @@ export async function handleBalancesReserveRepatriated(event: SubstrateEvent) {
     const nativeTokenName = await getTokenName(nativeToken)
     const blockNumber = event.block.block.header.number.toBigInt()
 
+    if(blockNumber < BigInt(2000000)) return;
+    await readDataFromFile(event)
     await handleReservedRepatriated(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         status as any,
@@ -116,71 +150,163 @@ export async function handleBalancesReserveRepatriated(event: SubstrateEvent) {
     )
 }
 
-// handle currencies.Transferred
-export async function handleCurrenciesTransfer(event: SubstrateEvent) {
+/**
+handle tokens.Transfer
+Transfer succeeded.
+Transfer {
+    currency_id: T::CurrencyId,
+    from: T::AccountId,
+    to: T::AccountId,
+    amount: T::Balance,
+},
+ */
+export async function handleTokensTransfer(event: SubstrateEvent) {
     const [currency, from, to, amount] = event.event.data
     const fromId = from.toString()
     const toId = to.toString()
     const amountN = BigInt(amount.toString())
     const tokenName = await getTokenName(currency)
-    const nativeName = await getTokenName(nativeToken)
     const blockNumber = event.block.block.header.number.toBigInt()
 
-    // don't handle native token here
-    if (tokenName === nativeName) return;
-
+    if(blockNumber < BigInt(2000000)) return;
+    await readDataFromFile(event)
     await handleTransfer(tokenName, fromId, toId, amountN, event.block.timestamp, blockNumber)
 }
 
-/*
- handle currencies.Deposited
+/**
+handle tokens.Reserved
+Some balance was reserved (moved from free to reserved).
+Reserved {
+    currency_id: T::CurrencyId,
+    who: T::AccountId,
+    amount: T::Balance,
+}
+ */
+export async function handleTokensReserved(event: SubstrateEvent) {
+    const [currencyId, who, value] = event.event.data
+    const account = who.toString()
+    const amount = BigInt(value.toString())
+    const tokenName = await getTokenName(currencyId)
+    const blockNumber = event.block.block.header.number.toBigInt()
 
- DONT NEED handle balances.Deposit as we don't Deposit/Withdrawn any native token
- DONT NEED handle tokens.Endowed, as tokens.Endowed is appear with balances.Deposit
+    if(blockNumber < BigInt(2000000)) return;
+    await readDataFromFile(event)
+    await handleReserved(account, tokenName, amount, event.block.timestamp, blockNumber)
+}
+
+
+/**
+handle tokens.Unreserved
+Some balance was unreserved (moved from reserved to free).
+Unreserved { who: T::AccountId, amount: T::Balance },
+ */
+export async function handleTokensUnreserved(event: SubstrateEvent) {
+    // Some balance was unreserved (moved from reserved to free). \[who, value\]
+    const [currencyId, who, value] = event.event.data
+    const account = who.toString()
+    const amount = BigInt(value.toString())
+    const tokenName = await getTokenName(currencyId)
+    const blockNumber = event.block.block.header.number.toBigInt()
+
+    if(blockNumber < BigInt(2000000)) return;
+    await readDataFromFile(event)
+    await handleUnReserved(account, tokenName, amount, event.block.timestamp, blockNumber)
+}
+
+/**
+handle tokens.ReserveRepatriated
+Some balance was moved from the reserve of the first account to the second account.
+Final argument indicates the destination balance type.
+ReserveRepatriated {
+    from: T::AccountId,
+    to: T::AccountId,
+    amount: T::Balance,
+    destination_status: Status,
+},
+ */
+export async function handleTokensReserveRepatriated(event: SubstrateEvent) {
+    const [currencyId, from, to, balance, status] = event.event.data
+    const fromId = from.toString()
+    const toId = to.toString()
+    const amount = BigInt(balance.toString())
+    const tokenName = await getTokenName(currencyId)
+    const blockNumber = event.block.block.header.number.toBigInt()
+
+    if(blockNumber < BigInt(2000000)) return;
+    await readDataFromFile(event)
+    await handleReservedRepatriated(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        status as any,
+        fromId,
+        toId,
+        tokenName,
+        amount,
+        event.block.timestamp,
+        blockNumber
+    )
+}
+
+/*
+handle tokens.Deposite
+Deposited some balance into an account
+Deposited {
+    currency_id: T::CurrencyId,
+    who: T::AccountId,
+    amount: T::Balance,
+}
 */
-export async function handleCurrenciesDeposite(event: SubstrateEvent) {
-    // Deposit success. \[currency_id, who, amount\]
+export async function handleTokensDeposited(event: SubstrateEvent) {
     const [currency, who, value] = event.event.data
     const recipientId = who.toString()
     const tokenName = await getTokenName(currency)
     const amount = BigInt(value.toString())
     const blockNumber = event.block.block.header.number.toBigInt()
 
+    if(blockNumber < BigInt(2000000)) return;
+    await readDataFromFile(event)
     await handleDeposit(recipientId, tokenName, amount, event.block.timestamp, blockNumber)
 }
 
-// handle currencies.Withdrawn
-export async function handleCurrenciesWithdrawn(event: SubstrateEvent) {
-    // Withdraw success. \[currency_id, who, amount\]
+/*
+handle currencies.Withdrawn
+Some balances were withdrawn (e.g. pay for transaction fee)
+Withdrawn {
+	currency_id: T::CurrencyId,
+	who: T::AccountId,
+	amount: T::Balance,
+}
+*/
+export async function handleTokensWithdrawn(event: SubstrateEvent) {
     const [currency, who, value] = event.event.data
     const accountId = who.toString()
     const tokenName = await getTokenName(currency)
     const amount = BigInt(value.toString())
     const blockNumber = event.block.block.header.number.toBigInt()
 
+    if(blockNumber < BigInt(2000000)) return;
+    await readDataFromFile(event)
     await handleWithdrawn(accountId, tokenName, amount, event.block.timestamp, blockNumber)
 }
 
-// handle currencies.DustSwept
-export async function handleDustSwept(event: SubstrateEvent) {
-    // Dust swept. \[currency_id, who, amount\]
-    const [currency, who, value] = event.event.data
-    const accountId = who.toString()
-    const tokenName = await getTokenName(currency)
-    const amount = BigInt(value.toString())
-    const blockNumber = event.block.block.header.number.toBigInt()
-
-    await handleTreasuryDeposit(accountId, tokenName, amount, event.block.timestamp, blockNumber)
+/**
+handle tokens.Slashed
+Some balances were slashed (e.g. due to mis-behavior)
+Slashed {
+	currency_id: T::CurrencyId,
+	who: T::AccountId,
+	free_amount: T::Balance,
+	reserved_amount: T::Balance,
 }
-
-// handle currencies.BalanceUpdated
-export async function handleBalanceUpdatedEvent(event: SubstrateEvent) {
-    // Update balance success. \[currency_id, who, amount\]
-    const [currency, who, value] = event.event.data
+ */
+export async function handleTokensSlashed (event: SubstrateEvent) {
+    const [currency, who, free, reserved] = event.event.data
     const accountId = who.toString()
     const tokenName = await getTokenName(currency)
-    const amount = BigInt(value.toString())
+    const freeAmount = BigInt(free.toString())
+    const reservedAmount = BigInt(reserved.toString())
     const blockNumber = event.block.block.header.number.toBigInt()
 
-    await handleBalanceUpdated(accountId, tokenName, amount, event.block.timestamp, blockNumber)
+    if(blockNumber < BigInt(2000000)) return;
+    await readDataFromFile(event)
+    await handleSlashed(accountId, tokenName, freeAmount, reservedAmount, event.block.timestamp, blockNumber);
 }
