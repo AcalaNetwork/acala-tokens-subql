@@ -60,7 +60,7 @@ async function getNativeToken() {
 
     return apiAt.query.system.account.entriesPaged({
       args: [],
-      pageSize: 1000,
+      pageSize: 500,
       startKey,
     })
   })
