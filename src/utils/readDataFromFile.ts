@@ -29,14 +29,14 @@ export const readDataFromFile = async (event: SubstrateEvent) => {
 
     await Promise.all((unNativeTokenBalances as BalanceDataProsp[]).map(async item => {
       const isNew = isNewAccount(item.account, event);
-      await updateAccountBalance(item.account, item.token, BigInt(item.free), BigInt(item.reserved), BigInt(item.frozen), timestamp, height, isNew);
       await updateToken(item.token, BigInt(item.free) + BigInt(item.reserved) + BigInt(item.frozen), BigInt(0), BigInt(item.reserved), BigInt(item.frozen), height, timestamp);
+      await updateAccountBalance(item.account, item.token, BigInt(item.free), BigInt(item.reserved), BigInt(item.frozen), timestamp, height, isNew);
     }))
 
     await Promise.all((nativeTokenBalances as BalanceDataProsp[]).map(async item => {
       const isNew = isNewAccount(item.account, event);
-      await updateAccountBalance(item.account, item.token, BigInt(item.free), BigInt(item.reserved), BigInt(item.frozen), timestamp, height, isNew);
       await updateToken(item.token, BigInt(item.free) + BigInt(item.reserved) + BigInt(item.frozen), BigInt(0), BigInt(item.reserved), BigInt(item.frozen), height, timestamp);
+      await updateAccountBalance(item.account, item.token, BigInt(item.free), BigInt(item.reserved), BigInt(item.frozen), timestamp, height, isNew);
     }))
   }
 }
