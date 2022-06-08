@@ -5,7 +5,7 @@ const fs = require('fs');
 const { forceToCurrencyName } = require('@acala-network/sdk-core');
 
 async function createApi() {
-  const endpoint = 'wss://karura.polkawallet.io';
+  const endpoint = 'wss://acala.polkawallet.io';
   const provider = new WsProvider(endpoint)
 
   const api = await ApiPromise.create(options({ provider }))
