@@ -23,7 +23,7 @@
     "@polkadot/api": "^7.1.1",
     "@polkadot/wasm-bridge": "^6.1.1",
     "@subql/cli": "1.0.2-0",
-    "@subql/types": "^0.11.0",
+    "@subql/types": "^1.1.0",
     "@typescript-eslint/eslint-plugin": "^5.14.0",
     "@typescript-eslint/parser": "^5.14.0",
     "eslint": "^7.32.0",
@@ -36,6 +36,7 @@
     "@acala-network/types": "^4.0.4-2",
     "@open-web3/util": "^1.1.4",
     "@polkadot/wasm-crypto-init": "^6.1.1",
+    "@polkadot/wasm-util": "^6.1.1",
     "@subql/node": "^0.29.1",
     "dayjs": "^1.10.7"
   },
