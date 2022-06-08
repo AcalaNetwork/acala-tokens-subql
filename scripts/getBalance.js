@@ -51,7 +51,7 @@ async function getUnnativeToken() {
 async function getNativeToken() {
   const api = await createApi();
 
-  const apiAt = await api.at('0xfb944678cdcc5ab3f88a84823bf121d675d934f9ae76677383af52d418987620');
+  const apiAt = await api.at('0x5f3cbf4e88a8a83e2507ffc20a8b6d5a393f27af54f4400a7404981bf2c54bbd');
 
   console.log(Object.keys(apiAt.query.system.account));
 
