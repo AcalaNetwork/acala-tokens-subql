@@ -5,6 +5,7 @@ import { updateAccountBalance } from './updateAccountBalance';
 import { isNewAccount } from './isNewAccount';
 import { SubstrateEvent } from '@subql/types';
 import { updateToken } from './updateToken';
+import { startHeight } from '../mappings/mappingHandlers';
 
 interface BalanceDataProsp {
   account: string;
@@ -21,7 +22,7 @@ export const readDataFromFile = async (event: SubstrateEvent) => {
 
   if (exists) {
     return;
-  } else if(height >= BigInt(2000000)) {
+  } else if(height >= BigInt(startHeight)) {
     const record = new ReadBlock('read');
     record.height = height;
 
