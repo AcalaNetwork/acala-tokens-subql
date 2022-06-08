@@ -18,26 +18,38 @@ interface BalanceDataProsp {
 export const readDataFromFile = async (event: SubstrateEvent) => {
   const exists = await ReadBlock.get('read');
   const height = event.block.block.header.number.toBigInt();
-  const timestamp = event.block.timestamp
+  const timestamp = event.block.timestamp;
+  const allBalances = (nativeTokenBalances as BalanceDataProsp[]).concat((unNativeTokenBalances as BalanceDataProsp[]));
+  if (height > BigInt(startHeight)) return;
 
   if (exists) {
-    return;
-  } else if(height >= BigInt(startHeight)) {
-    const record = new ReadBlock('read');
-    record.height = height;
+    const start = exists.start;
+    const size = exists.size;
+    const data = allBalances.slice(start, start + size);
 
+    await insert(data, event, timestamp, height);
+    exists.start = start + size;
+    await exists.save();
+  } else {
+    const record = new ReadBlock('read');
+    record.start = 0;
+    record.size = 100;
     await record.save();
 
-    await Promise.all((unNativeTokenBalances as BalanceDataProsp[]).map(async item => {
-      const isNew = isNewAccount(item.account, event);
-      await updateToken(item.token, BigInt(item.free) + BigInt(item.reserved) + BigInt(item.frozen), BigInt(0), BigInt(item.reserved), BigInt(item.frozen), height, timestamp);
-      await updateAccountBalance(item.account, item.token, BigInt(item.free), BigInt(item.reserved), BigInt(item.frozen), timestamp, height, isNew);
-    }))
-
-    await Promise.all((nativeTokenBalances as BalanceDataProsp[]).map(async item => {
-      const isNew = isNewAccount(item.account, event);
-      await updateToken(item.token, BigInt(item.free) + BigInt(item.reserved) + BigInt(item.frozen), BigInt(0), BigInt(item.reserved), BigInt(item.frozen), height, timestamp);
-      await updateAccountBalance(item.account, item.token, BigInt(item.free), BigInt(item.reserved), BigInt(item.frozen), timestamp, height, isNew);
-    }))
+    await insert(allBalances.slice(0, 100), event, timestamp, height);
   }
+}
+
+export const insert = async (allBalances: BalanceDataProsp[], event: SubstrateEvent, timestamp: Date, height: bigint) => {
+  await Promise.all(allBalances.map(async item => {
+    const isNew = isNewAccount(item.account, event);
+    await updateToken(item.token, BigInt(item.free) + BigInt(item.reserved) + BigInt(item.frozen), BigInt(0), BigInt(item.reserved), BigInt(item.frozen), height, timestamp);
+    await updateAccountBalance(item.account, item.token, BigInt(item.free), BigInt(item.reserved), BigInt(item.frozen), timestamp, height, isNew);
+  }))
+
+  // await Promise.all((nativeTokenBalances as BalanceDataProsp[]).map(async item => {
+  //   const isNew = isNewAccount(item.account, event);
+  //   await updateToken(item.token, BigInt(item.free) + BigInt(item.reserved) + BigInt(item.frozen), BigInt(0), BigInt(item.reserved), BigInt(item.frozen), height, timestamp);
+  //   await updateAccountBalance(item.account, item.token, BigInt(item.free), BigInt(item.reserved), BigInt(item.frozen), timestamp, height, isNew);
+  // }))
 }

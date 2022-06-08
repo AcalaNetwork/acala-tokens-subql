@@ -84,4 +84,6 @@ type DailyAccountBalance @entity {
 type ReadBlock @entity {
     id: ID!
     height: BigInt
+    size: Int
+    start: Int
 }
