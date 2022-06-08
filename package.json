@@ -22,7 +22,7 @@
   "devDependencies": {
     "@polkadot/api": "^7.1.1",
     "@polkadot/wasm-bridge": "^6.1.1",
-    "@subql/cli": "^0.20.0",
+    "@subql/cli": "^1.0.1",
     "@subql/types": "^0.11.0",
     "@typescript-eslint/eslint-plugin": "^5.14.0",
     "@typescript-eslint/parser": "^5.14.0",
