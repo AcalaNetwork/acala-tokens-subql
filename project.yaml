@@ -1,14 +1,21 @@
-specVersion: 0.2.0
+specVersion: 1.0.0
 name: acala-tokens
 version: 1.0.0
 description: 'statistics tokens data'
 repository: 'https://github.com/AcalaNetwork/acala-tokens-subql'
+runner:
+  node:
+    name: "@subql/node"
+    version: "0.35.1"
+  query:
+    name: "@subql/query"
+    version: "0.16.0"
 schema: 
     file: ./schema.graphql
 network:
-  genesisHash: '0xbaf5aabe40646d11f0ee8abbdc64f4a4b7674925cba08e4a05ff9ebed6e2126b'
-  dictionary: https://api.subquery.network/sq/subquery/karura-dictionary
-  endpoint: wss://karura.api.onfinality.io/public-ws
+  chainId: "0xfc41b9bd8ef8fe53d58c7ea67c794c7ec9a73daf05e6d54b14ff6342c99ba64c"
+  dictionary: https://api.subquery.network/sq/subquery/acala-dictionary
+  endpoint: wss://acala.polkawallet.io
   chaintypes:
     file: './src/chain-types.js'
 dataSources:
