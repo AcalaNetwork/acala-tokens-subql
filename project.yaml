@@ -6,17 +6,22 @@ repository: ''
 schema:
   file: ./schema.graphql
 network:
-  genesisHash: "0xfc41b9bd8ef8fe53d58c7ea67c794c7ec9a73daf05e6d54b14ff6342c99ba64c"
-  dictionary: https://api.subquery.network/sq/subquery/acala-dictionary
-  endpoint: wss://acala.polkawallet.io
+  genesisHash: '0xbaf5aabe40646d11f0ee8abbdc64f4a4b7674925cba08e4a05ff9ebed6e2126b'
+  dictionary: https://api.subquery.network/sq/subquery/karura-dictionary
+  endpoint: wss://karura.api.onfinality.io/public-ws
   chaintypes:
     file: './src/chain-types.js'
 dataSources:
     - kind: substrate/Runtime
-      startBlock: 1095000
+      startBlock: 1097000
       mapping:
         file: './dist/index.js'
         handlers:
+          - handler: handleBalancesEndowed
+            kind: substrate/EventHandler
+            filter:
+              module: balances
+              method: Endowed
           - handler: handleBalancesDustLost
             kind: substrate/EventHandler
             filter:
@@ -53,6 +58,16 @@ dataSources:
               module: balances
               method: Withdraw
        
+          - handler: handleTokensEndowed
+            kind: substrate/EventHandler
+            filter:
+              module: tokens
+              method: Endowed
+          - handler: handleTokensDustLost
+            kind: substrate/EventHandler
+            filter:
+              module: tokens
+              method: DustLost
           - handler: handleTokensTransfer
             kind: substrate/EventHandler
             filter:
@@ -63,6 +78,11 @@ dataSources:
             filter:
               module: tokens
               method: Reserved
+          - handler: handleTokensUnreserved
+            kind: substrate/EventHandler
+            filter:
+              module: tokens
+              method: Unreserved
           - handler: handleTokensReserveRepatriated
             kind: substrate/EventHandler
             filter:
