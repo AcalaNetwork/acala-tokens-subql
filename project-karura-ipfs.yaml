@@ -70,6 +70,11 @@ dataSources:
             filter:
               module: tokens
               method: Reserved
+          - handler: handleTokensUnreserved
+            kind: substrate/EventHandler
+            filter:
+              module: tokens
+              method: Unreserved
           - handler: handleTokensReserveRepatriated
             kind: substrate/EventHandler
             filter:
