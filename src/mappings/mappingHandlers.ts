@@ -9,30 +9,9 @@ import { handleWithdrawn } from './handleWithdrawn'
 import { isNewAccount } from '../utils/isNewAccount'
 import { handleSlashed } from './handleSlashed'
 import { readDataFromFile } from '../utils/readDataFromFile'
-import { updateToken } from '../utils/updateToken'
-import { updateAccountBalance } from '../utils/updateAccountBalance'
 
 const nativeToken = getNativeCurrency(api as any);
 export const startHeight = 1100000;
-
-/*
-handle balances.Endowed
-An account was created with some free balance.
-Endowed { account: T::AccountId, free_balance: T::Balance }
-*/
-export async function handleBalancesEndowed(event: SubstrateEvent) {
-    const [account, free] = event.event.data
-    const accountId = account.toString()
-    const amount = BigInt(free.toString())
-    const tokenName = await getTokenName(nativeToken)
-    const blockNumber = event.block.block.header.number.toBigInt()
-    const isNew = isNewAccount(accountId, event);
-
-    await readDataFromFile(event)
-    if(blockNumber < BigInt(startHeight)) return;
-    await updateToken(tokenName, amount, amount, BigInt(0), BigInt(0), blockNumber, event.block.timestamp);
-    await updateAccountBalance(accountId, tokenName, amount, BigInt(0), BigInt(0), event.block.timestamp, blockNumber, isNew);
-}
 
 /*
 handle balances.Transfer
@@ -174,52 +153,6 @@ export async function handleBalancesReserveRepatriated(event: SubstrateEvent) {
 }
 
 
-
-/*
-handle tokens.Endowed
-An account was created with some free balance.
-Endowed {
-	currency_id: T::CurrencyId,
-	who: T::AccountId,
-	amount: T::Balance,
-}
-*/
-export async function handleTokensEndowed(event: SubstrateEvent) {
-    const [currencyId, account, free] = event.event.data
-    const accountId = account.toString()
-    const amount = BigInt(free.toString())
-    const tokenName = await getTokenName(currencyId)
-    const blockNumber = event.block.block.header.number.toBigInt()
-    const isNew = isNewAccount(accountId, event);
-
-    await readDataFromFile(event)
-    if(blockNumber < BigInt(startHeight)) return;
-    await updateToken(tokenName, amount, amount, BigInt(0), BigInt(0), blockNumber, event.block.timestamp);
-    await updateAccountBalance(accountId, tokenName, amount, BigInt(0), BigInt(0), event.block.timestamp, blockNumber, isNew);
-}
-
-/*
-handle tokens.DustLost
-An account was removed whose balance was non-zero but below
-ExistentialDeposit, resulting in an outright loss.
-DustLost {
-	currency_id: T::CurrencyId,
-	who: T::AccountId,
-	amount: T::Balance,
-}
-*/
-export async function handleTokensDustLost(event: SubstrateEvent) {
-    const [currencyId, from, value] = event.event.data
-    const fromId = from.toString()
-    const amount = BigInt(value.toString())
-    const tokenName = await getTokenName(currencyId)
-    const blockNumber = event.block.block.header.number.toBigInt()
-
-    await readDataFromFile(event)
-    if(blockNumber < BigInt(startHeight)) return;
-    await handleWithdrawn(fromId, tokenName, amount, event.block.timestamp, blockNumber)
-}
-
 /**
 handle tokens.Transfer
 Transfer succeeded.
@@ -338,7 +271,7 @@ export async function handleTokensDeposited(event: SubstrateEvent) {
 }
 
 /*
-handle currencies.Withdrawn
+handle tokens.Withdrawn
 Some balances were withdrawn (e.g. pay for transaction fee)
 Withdrawn {
 	currency_id: T::CurrencyId,
