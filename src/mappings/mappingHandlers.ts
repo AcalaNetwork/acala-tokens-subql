@@ -9,30 +9,9 @@ import { handleWithdrawn } from './handleWithdrawn'
 import { isNewAccount } from '../utils/isNewAccount'
 import { handleSlashed } from './handleSlashed'
 import { readDataFromFile } from '../utils/readDataFromFile'
-import { updateToken } from '../utils/updateToken'
-import { updateAccountBalance } from '../utils/updateAccountBalance'
 
 const nativeToken = getNativeCurrency(api as any);
 export const startHeight = 2000000;
-
-/*
-handle balances.Endowed
-An account was created with some free balance.
-Endowed { account: T::AccountId, free_balance: T::Balance }
-*/
-export async function handleBalancesEndowed(event: SubstrateEvent) {
-    const [account, free] = event.event.data
-    const accountId = account.toString()
-    const amount = BigInt(free.toString())
-    const tokenName = await getTokenName(nativeToken)
-    const blockNumber = event.block.block.header.number.toBigInt()
-    const isNew = isNewAccount(accountId, event);
-
-    await readDataFromFile(event)
-    if(blockNumber < BigInt(startHeight)) return;
-    await updateToken(tokenName, amount, amount, BigInt(0), BigInt(0), blockNumber, event.block.timestamp);
-    await updateAccountBalance(accountId, tokenName, amount, BigInt(0), BigInt(0), event.block.timestamp, blockNumber, isNew);
-}
 
 /*
 handle balances.Transfer

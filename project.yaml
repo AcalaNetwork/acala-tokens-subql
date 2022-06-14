@@ -17,11 +17,6 @@ dataSources:
       mapping:
         file: './dist/index.js'
         handlers:
-          - handler: handleBalancesEndowed
-            kind: substrate/EventHandler
-            filter:
-              module: balances
-              method: Endowed
           - handler: handleBalancesDustLost
             kind: substrate/EventHandler
             filter:
@@ -58,16 +53,6 @@ dataSources:
               module: balances
               method: Withdraw
        
-          - handler: handleTokensEndowed
-            kind: substrate/EventHandler
-            filter:
-              module: tokens
-              method: Endowed
-          - handler: handleTokensDustLost
-            kind: substrate/EventHandler
-            filter:
-              module: tokens
-              method: DustLost
           - handler: handleTokensTransfer
             kind: substrate/EventHandler
             filter:
