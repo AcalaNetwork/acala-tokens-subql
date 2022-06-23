@@ -18,7 +18,7 @@ async function createApi() {
 async function getUnnativeToken() {
   const api = await createApi();
 
-  const apiAt = await api.at('0x5f3cbf4e88a8a83e2507ffc20a8b6d5a393f27af54f4400a7404981bf2c54bbd');
+  const apiAt = await api.at('0x754d100adf4764b24263402bef4ffa9537cab6d15e275d958292e5a31fd4ffd5');
 
   console.log(Object.keys(apiAt.query.tokens.accounts));
 
@@ -51,7 +51,7 @@ async function getUnnativeToken() {
 async function getNativeToken() {
   const api = await createApi();
 
-  const apiAt = await api.at('0x5f3cbf4e88a8a83e2507ffc20a8b6d5a393f27af54f4400a7404981bf2c54bbd');
+  const apiAt = await api.at('0x754d100adf4764b24263402bef4ffa9537cab6d15e275d958292e5a31fd4ffd5');
 
   console.log(Object.keys(apiAt.query.system.account));
 
@@ -60,7 +60,7 @@ async function getNativeToken() {
 
     return apiAt.query.system.account.entriesPaged({
       args: [],
-      pageSize: 1000,
+      pageSize: 500,
       startKey,
     })
   })
