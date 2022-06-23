@@ -32,7 +32,7 @@ export const readDataFromFile = async (event: SubstrateEvent) => {
     await exists.save();
   } else {
     const record = new ReadBlock('read');
-    record.start = 0;
+    record.start = 100;
     record.size = 100;
     await record.save();
 
