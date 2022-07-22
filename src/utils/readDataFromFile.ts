@@ -41,9 +41,31 @@ export const readDataFromFile = async (event: SubstrateEvent) => {
 }
 
 export const insert = async (allBalances: BalanceDataProsp[], event: SubstrateEvent, timestamp: Date, height: bigint) => {
+  const obj = {};
+
+  allBalances.forEach(item => {
+    if (obj[item.token]) {
+      const data = obj[item.token]
+      data.free += Number(item.free);
+      data.reserved += Number(item.reserved);
+      data.frozen += Number(item.frozen);
+    } else {
+      obj[item.token] = {
+        token: item.token,
+        free: Number(item.free),
+        reserved: Number(item.reserved),
+        frozen: Number(item.frozen),
+      }
+    }
+  })
+
+  await Promise.all(Object.keys(obj).map(async key => {
+    const item = obj[key];
+    await updateToken(item.token, BigInt(item.free) + BigInt(item.reserved), BigInt(0), BigInt(item.reserved), BigInt(item.frozen), height, timestamp);
+  }))
+
   await Promise.all(allBalances.map(async item => {
     const isNew = isNewAccount(item.account, event);
-    await updateToken(item.token, BigInt(item.free) + BigInt(item.reserved) + BigInt(item.frozen), BigInt(0), BigInt(item.reserved), BigInt(item.frozen), height, timestamp);
     await updateAccountBalance(item.account, item.token, BigInt(item.free), BigInt(item.reserved), BigInt(item.frozen), timestamp, height, isNew);
   }))
 
